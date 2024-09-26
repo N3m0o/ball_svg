@@ -57,13 +57,9 @@
               d="M0 350 Q400 0 800 350" />
     </svg>
 
-    
     <div id="ball" class="moving-object">
         <svg width="100" height="100" viewBox="0 0 210 210" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g filter="url(#filter0_f_303_117)">
-                <circle cx="105" cy="104.96" r="22.3359" fill="white"/>
-            </g>
-            <g filter="url(#filter1_f_303_117)">
                 <circle cx="105" cy="104.96" r="22.3359" fill="white"/>
             </g>
             <g filter="url(#filter2_f_303_117)">
@@ -114,7 +110,6 @@
     </div>
 </div>
 
-
 <button id="moveButton">Your Task</button>
 
 <script>
@@ -122,29 +117,48 @@
     const ball = document.getElementById('ball');
     const arcPath = document.getElementById('arc-path');
     const pathLength = arcPath.getTotalLength();
-    let mode = 0;
 
-    function moveBall() {
-        mode = (mode + 1) % 4; 
+    const stops = [0, pathLength * 0.3, pathLength * 0.6, pathLength * 0.9, 0]; // Позиции для остановки шарика
+    let currentStopIndex = 0;
 
-        let position;
-        if (mode === 1) {
-            position = pathLength * 0.3;
-        } else if (mode === 2) {
-            position = pathLength * 0.6;
-        } else if (mode === 3) {
-            position = pathLength *0.9;
-        } else {
-            position = 0;
+    function animateToNextStop() {
+        // Если достигли последней точки (возврат на 0), остановить анимацию
+        if (currentStopIndex >= stops.length - 1) {
+            return;
         }
 
-        const point = arcPath.getPointAtLength(position);
-        ball.style.left = point.x - ball.clientWidth / 2 + 'px';
-        ball.style.top = point.y - ball.clientHeight / 2 + 'px';
+        const startPosition = stops[currentStopIndex];
+        currentStopIndex = (currentStopIndex + 1);
+        const endPosition = stops[currentStopIndex];
+        
+        const duration = 100; // Продолжительность анимации до следующей остановки
+        const steps = 60; // Количество шагов анимации (FPS)
+        const stepTime = duration / steps;
+        let step = 0;
+
+        const interval = setInterval(() => {
+            step++;
+            const progress = step / steps;
+            const currentPosition = startPosition + (endPosition - startPosition) * progress;
+            
+            const point = arcPath.getPointAtLength(currentPosition);
+            ball.style.left = point.x - ball.clientWidth / 2 + 'px';
+            ball.style.top = point.y - ball.clientHeight / 2 + 'px';
+            
+            if (step >= steps) {
+                clearInterval(interval);
+                // Задержка перед началом следующего движения, если не достигнута последняя точка
+                if (currentStopIndex < stops.length - 1) {
+                    setTimeout(animateToNextStop, 500); // 500мс задержка между остановками
+                }
+            }
+        }, stepTime);
     }
 
-    button.addEventListener('click', moveBall);
-    moveBall(); 
+    button.addEventListener('click', () => {
+        currentStopIndex = 0; // Сбросить в начальную позицию перед запуском
+        animateToNextStop(); // Запустить анимацию
+    });
 </script>
 
 </body>
